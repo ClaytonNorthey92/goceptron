@@ -47,7 +47,7 @@ func (d *dataset) Swap(i, j int) {
 	d.Results[j] = tmpR
 }
 
-func TestPerceptronOneVsMany(t *testing.T) {
+func TestPerceptronBinaryClassifier(t *testing.T) {
 	file, err := os.Open("./datasets/iris.csv")
 	if err != nil {
 		t.Error(err.Error())
