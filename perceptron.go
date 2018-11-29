@@ -59,6 +59,4 @@ func (p *Perceptron) updateWeights(update float64, input []float64) {
 	for i, _ := range p.weights {
 		p.weights[i] += update * input[i]
 	}
-	fmt.Println(p.bias)
-	fmt.Println(p.weights)
 }
