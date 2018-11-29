@@ -1,4 +1,4 @@
-package perceptron
+package goceptron
 
 import (
 	"encoding/csv"
