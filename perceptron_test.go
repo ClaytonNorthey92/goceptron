@@ -3,6 +3,7 @@ package goceptron
 import (
 	"encoding/csv"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"testing"
@@ -28,8 +29,8 @@ func TestPerceptron(t *testing.T) {
 }
 
 type dataset struct {
-	Data    [100][]float64
-	Results [100]int
+	Data    [][]float64
+	Results []int
 }
 
 func (d *dataset) Len() int {
@@ -59,8 +60,8 @@ func TestPerceptronBinaryClassifier(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	var data [100][]float64
-	var results [100]int
+	data := make([][]float64, 100)
+	results := make([]int, 100)
 
 	usedRows := rows[:100]
 
@@ -112,6 +113,85 @@ func TestPerceptronBinaryClassifier(t *testing.T) {
 			fmt.Println(prediction, testResults[i], testData[i])
 			t.Error("incorrect prediction")
 		}
+	}
+
+}
+
+func TestPerceptronBinaryClassifierSonar(t *testing.T) {
+	file, err := os.Open("./datasets/sonar.csv")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer file.Close()
+
+	rows, err := csv.NewReader(file).ReadAll()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	data := make([][]float64, 208)
+	results := make([]int, 208)
+
+	usedRows := rows[:208]
+
+	for i, row := range usedRows {
+		var featuresRaw []string = row[:60]
+		features := make([]float64, 60)
+		for i, f := range featuresRaw {
+			features[i], err = strconv.ParseFloat(f, 64)
+			if err != nil {
+				t.Error(err.Error())
+			}
+		}
+		data[i] = features
+		if row[60] == "M" {
+			results[i] = 1
+		} else {
+			results[i] = -1
+		}
+	}
+
+	d := dataset{
+		Data:    data,
+		Results: results,
+	}
+
+	shuffler := shuffle.New(rand.NewSource(1))
+
+	shuffler.Shuffle(&d)
+
+	trainingData := d.Data[:140]
+	trainingResults := d.Results[:140]
+
+	testData := d.Data[140:208]
+	testResults := d.Results[140:208]
+
+	perceptron := Perceptron{
+		LearningRate: 0.1,
+		Epochs:       50000,
+		RandomSeed:   1,
+	}
+
+	perceptron.Fit(trainingData, trainingResults)
+
+	total := len(testData)
+	var errorCount int
+
+	for i, v := range testData {
+		prediction, err := perceptron.Predict(v)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if prediction != testResults[i] {
+			errorCount++
+		}
+	}
+
+	errorRate := float64(errorCount) / float64(total)
+	if errorRate > 0.12 {
+		fmt.Sprintf("Correct Predictions: %d -- Incorrect Predictions: %d", total-errorCount, errorCount)
+		t.Errorf("Sonar model is not accurate enough, error rate: %f", errorRate)
 	}
 
 }
