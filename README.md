@@ -3,6 +3,7 @@
 
 ## Dataset credit
 * iris.csv - https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data
+* sonar.csv - https://archive.ics.uci.edu/ml/machine-learning-databases/undocumented/connectionist-bench/sonar/sonar.all-data
 
 
 ## Install
