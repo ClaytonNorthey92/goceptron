@@ -8,14 +8,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/shogo82148/go-shuffle"
+	shuffle "github.com/shogo82148/go-shuffle"
 )
 
 func TestPerceptron(t *testing.T) {
-	perceptron := Perceptron{
+	perceptron := PerceptronBasic{
 		LearningRate: 0.1,
 		Epochs:       50,
 		RandomSeed:   1,
+		Stddev:       0.1,
 	}
 
 	trainingSet := [][]float64{
@@ -95,10 +96,11 @@ func TestPerceptronBinaryClassifier(t *testing.T) {
 	testData := d.Data[66:100]
 	testResults := d.Results[66:100]
 
-	perceptron := Perceptron{
+	perceptron := PerceptronBasic{
 		LearningRate: 0.15,
 		Epochs:       50,
 		RandomSeed:   1,
+		Stddev:       0.1,
 	}
 
 	perceptron.Fit(trainingData, trainingResults)
@@ -166,10 +168,11 @@ func TestPerceptronBinaryClassifierSonar(t *testing.T) {
 	testData := d.Data[140:208]
 	testResults := d.Results[140:208]
 
-	perceptron := Perceptron{
-		LearningRate: 0.1,
+	perceptron := PerceptronBasic{
+		LearningRate: 0.15,
 		Epochs:       50000,
 		RandomSeed:   1,
+		Stddev:       0.1,
 	}
 
 	perceptron.Fit(trainingData, trainingResults)
@@ -192,6 +195,81 @@ func TestPerceptronBinaryClassifierSonar(t *testing.T) {
 	if errorRate > 0.12 {
 		fmt.Sprintf("Correct Predictions: %d -- Incorrect Predictions: %d", total-errorCount, errorCount)
 		t.Errorf("Sonar model is not accurate enough, error rate: %f", errorRate)
+	}
+
+}
+
+func TestPerceptronGDBinaryClassifier(t *testing.T) {
+	file, err := os.Open("./datasets/iris.csv")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer file.Close()
+
+	rows, err := csv.NewReader(file).ReadAll()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	data := make([][]float64, 100)
+	results := make([]int, 100)
+
+	usedRows := rows[:100]
+
+	for i, row := range usedRows {
+		var featuresRaw []string = row[:4]
+		features := make([]float64, 4)
+		for i, f := range featuresRaw {
+			features[i], err = strconv.ParseFloat(f, 64)
+			if err != nil {
+				t.Error(err.Error())
+			}
+		}
+		data[i] = features
+		if row[4] == "Iris-setosa" {
+			results[i] = 1
+		} else {
+			results[i] = -1
+		}
+	}
+
+	d := dataset{
+		Data:    data,
+		Results: results,
+	}
+
+	shuffle.Shuffle(&d)
+
+	Normalize(d.Data)
+
+	trainingData := d.Data[:66]
+	trainingResults := d.Results[:66]
+
+	testData := d.Data[66:100]
+	testResults := d.Results[66:100]
+
+	p := PerceptronBasic{
+		LearningRate: 0.0001,
+		Epochs:       100,
+		RandomSeed:   1,
+		Stddev:       0.01,
+	}
+
+	perceptron := PerceptronAdalineGD{
+		PerceptronBasic: p,
+	}
+
+	perceptron.Fit(trainingData, trainingResults)
+
+	for i, v := range testData {
+		prediction, err := perceptron.Predict(v)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if prediction != testResults[i] {
+			t.Error("incorrect prediction")
+		}
 	}
 
 }
