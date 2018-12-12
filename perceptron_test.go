@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/shogo82148/go-shuffle"
+	shuffle "github.com/shogo82148/go-shuffle"
 )
 
 func TestPerceptron(t *testing.T) {
-	perceptron := Perceptron{
+	perceptron := PerceptronBasic{
 		LearningRate: 0.1,
 		Epochs:       50,
 		RandomSeed:   1,
@@ -95,7 +95,7 @@ func TestPerceptronBinaryClassifier(t *testing.T) {
 	testData := d.Data[66:100]
 	testResults := d.Results[66:100]
 
-	perceptron := Perceptron{
+	perceptron := PerceptronBasic{
 		LearningRate: 0.15,
 		Epochs:       50,
 		RandomSeed:   1,
@@ -166,7 +166,7 @@ func TestPerceptronBinaryClassifierSonar(t *testing.T) {
 	testData := d.Data[140:208]
 	testResults := d.Results[140:208]
 
-	perceptron := Perceptron{
+	perceptron := PerceptronBasic{
 		LearningRate: 0.1,
 		Epochs:       50000,
 		RandomSeed:   1,
