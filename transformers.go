@@ -23,10 +23,17 @@ func Normalize(data [][]float64) {
 	flatData := mat.NewDense(len(data[0]), len(data), Flatten(data))
 
 	for i := 0; i < len(data[0]); i++ {
-		features := mat.DenseCopyOf(flatData.ColView(i).T()).RawRowView(0)
+		features := RawColView(flatData, i)
 		mean, stddev := stat.MeanStdDev(features, nil)
 		for j := 0; j < len(data); j++ {
 			data[j][i] = (data[j][i] - mean) / stddev
 		}
 	}
+}
+
+func RawColView(d *mat.Dense, col int) []float64 {
+	rows, _ := d.Dims()
+	results := mat.NewVecDense(rows, nil)
+	results.CopyVec(d.ColView(col))
+	return results.RawVector().Data
 }
